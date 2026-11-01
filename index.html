@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCRAPEKING // Cyber Threat Intelligence Command Center</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <!-- Ambient background glow layers -->
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+  <div class="glow-sphere glow-3"></div>
+
+  <div class="app-layout">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <div>
+          <div class="title-row">
+            <h1>SCRAPEKING <span class="tag">THREAT-ENGINE v3.0</span></h1>
+            <span class="live-pill"><span class="pulsing-dot"></span> 9 FEEDS LIVE</span>
+          </div>
+          <p class="brand-sub">Multi-Source Threat Intelligence Ingestion & Autonomous Heuristic Analysis</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <div class="btn-group">
+          <button class="btn btn-secondary" onclick="exportData('csv')" title="Export dataset as CSV">
+            <i class="fa-solid fa-file-csv"></i> CSV
+          </button>
+          <button class="btn btn-secondary" onclick="exportData('json')" title="Export dataset as JSON">
+            <i class="fa-solid fa-code"></i> JSON
+          </button>
+        </div>
+        <button id="scrapeBtn" class="btn btn-primary" onclick="runScraper()">
+          <i class="fa-solid fa-arrows-rotate" id="refreshIcon"></i>
+          <span>Ingest All Feeds</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Metrics Row (5 High-Visibility Cards) -->
+    <section class="metrics-grid">
+      <div class="glass-card metric-card">
+        <div class="metric-meta">
+          <span class="metric-label">TOTAL INTELLIGENCE</span>
+          <i class="fa-solid fa-database metric-icon"></i>
+        </div>
+        <span class="metric-value" id="totalCount">0</span>
+        <span class="metric-trend"><i class="fa-solid fa-clock"></i> Live sync active</span>
+      </div>
+
+      <div class="glass-card metric-card amber-glow">
+        <div class="metric-meta">
+          <span class="metric-label">MONITORED SOURCES</span>
+          <i class="fa-solid fa-tower-broadcast metric-icon amber-color"></i>
+        </div>
+        <span class="metric-value amber-color" id="sourcesCount">9</span>
+        <span class="metric-subtext">Enterprise feeds connected</span>
+      </div>
+
+      <div class="glass-card metric-card critical-glow">
+        <div class="metric-meta">
+          <span class="metric-label">CRITICAL THREATS</span>
+          <i class="fa-solid fa-triangle-exclamation metric-icon crit-color"></i>
+        </div>
+        <span class="metric-value crit-color" id="critCount">0</span>
+        <span class="metric-subtext">Zero-days & active exploits</span>
+      </div>
+
+      <div class="glass-card metric-card high-glow">
+        <div class="metric-meta">
+          <span class="metric-label">ELEVATED RISKS</span>
+          <i class="fa-solid fa-radiation metric-icon high-color"></i>
+        </div>
+        <span class="metric-value high-color" id="highCount">0</span>
+        <span class="metric-subtext">Ransomware & RCE vectors</span>
+      </div>
+
+      <div class="glass-card metric-card cyan-glow">
+        <div class="metric-meta">
+          <span class="metric-label">EXTRACTED CVEs</span>
+          <i class="fa-solid fa-bug metric-icon cyan-color"></i>
+        </div>
+        <span class="metric-value cyan-color" id="cveCount">0</span>
+        <span class="metric-subtext">Catalogued vulnerability IDs</span>
+      </div>
+    </section>
+
+    <!-- Visual Analytics Hub (Charts) -->
+    <section class="analytics-hub">
+      <div class="glass-card chart-container">
+        <h3><i class="fa-solid fa-chart-pie"></i> Overall Severity Breakdown</h3>
+        <div class="canvas-wrapper">
+          <canvas id="severityChart"></canvas>
+        </div>
+      </div>
+      <div class="glass-card chart-container">
+        <h3><i class="fa-solid fa-layer-group"></i> Intelligence Breakdown by Monitored Source</h3>
+        <div class="canvas-wrapper">
+          <canvas id="sourceChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter Control Bar -->
+    <section class="glass-card filter-toolbar">
+      <div class="filter-top-row">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchBox" placeholder="Search by title, description, or CVE (e.g. CVE-2024)..."
+            oninput="filterThreats()">
+        </div>
+
+        <div class="dropdown-wrap">
+          <select id="severityFilter" onchange="filterThreats()">
+            <option value="ALL">All Severities</option>
+            <option value="CRITICAL">Critical</option>
+            <option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LOW">Low</option>
+          </select>
+
+          <select id="sourceFilter" onchange="filterThreats()">
+            <option value="ALL">All Sources (9 Total)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Quick-Filter Source Chips Bar -->
+      <div id="sourceChipsBar" class="source-chips-bar">
+        <span class="chips-label"><i class="fa-solid fa-filter"></i> Quick Filter:</span>
+        <div id="sourceChipsList" class="source-chips-list"></div>
+      </div>
+    </section>
+
+    <!-- Threat Feed Output Section -->
+    <main class="feed-section">
+      <div class="feed-header">
+        <h2>Live Intelligence Stream <span id="feedCountBadge" class="feed-pill">0</span></h2>
+        <span id="loadingNotice" class="loading-state hidden">
+          <i class="fa-solid fa-circle-notch fa-spin"></i> Concurrently ingesting 9 sources...
+        </span>
+      </div>
+      <div id="threatList" class="threat-grid"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-brand">
+        <i class="fa-solid fa-crown gold-icon"></i> <strong>ScrapeKing</strong> Threat Intelligence Engine
+      </div>
+      <div class="footer-sources">
+        Sources: The Hacker News • CISA • BleepingComputer • SecurityWeek • Dark Reading • SANS ISC • Help Net Security • Zero Day Initiative • The Register
+      </div>
+    </footer>
+  </div>
+
+  <!-- Load Chart.js and application script at the end of body -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
